@@ -52,28 +52,28 @@ services:
     volumes:
       - bind9-slave-logs:/var/log/named
 
-  proxy: 
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    image: nginx
-    container_name: proxy
-    hostname: "www.mg.asa.br"
-    restart: always
-    tty: true
-    ports:
-      - "80:80/tcp"
-    depends_on:
-      - ns1
-      - ns2
-      - webmail
-      - web
-    networks:
-      ctnetwork:
-        ipv4_address: 172.25.10.60
-    dns:
-      - 172.25.10.10
-      - 172.25.10.11
+        # proxy: 
+        #build:
+        #context: ./nginx
+        #dockerfile: Dockerfile
+        #image: nginx
+        #container_name: proxy
+        #hostname: "www.mg.asa.br"
+        #restart: always
+        #tty: true
+        #ports:
+        # - "80:80/tcp"
+        #depends_on:
+        # - ns1
+        # - ns2
+        # - webmail
+        # - web
+        #networks:
+        #ctnetwork:
+        #ipv4_address: 172.25.10.60
+        #dns:
+        #- 172.25.10.10
+        #- 172.25.10.11
 
   email:
     build:
@@ -162,7 +162,7 @@ services:
       - ROUNDCUBEMAIL_SMTP_PORT=25
       - ROUNDCUBEMAIL_ASPELL_DICTS:pt_BR
     ports:
-      - "8888:80/tcp"
+      - "8080:80/tcp"
   web:
 
     build:
@@ -184,14 +184,14 @@ services:
       - 172.25.10.10
       - 172.25.10.11
     ports:
-      - "8080:80/tcp"
-    #volumes:
-    #  - wordpress:/var/www/html:rw
-    #environment:
-    #  - WORDPRESS_DB_HOST=MYSQL.mg.asa.br
-    #  - WORDPRESS_DB_USER=wordpress
-    #  - WORDPRESS_DB_PASSWORD=123@senha
-    #  - WORDPRESS_DB_NAME=wordpress
+      - "80:80/tcp"
+    volumes:
+      - wordpress:/var/www/html:rw
+    environment:
+      - WORDPRESS_DB_HOST=MYSQL.mg.asa.br
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=123@senha
+      - WORDPRESS_DB_NAME=wordpress
 
 volumes:
   bind9-master-logs:
@@ -210,8 +210,8 @@ volumes:
     name: tmp
   mail_logs:
     name: mail_logs
- # wordpress:
- #   name: wordpress
+  wordpress:
+    name: wordpress
   
   
 
