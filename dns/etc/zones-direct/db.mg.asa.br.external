@@ -13,12 +13,10 @@ $ORIGIN mg.asa.br.
 			  86400 )	; Negative Cache TTL
 ;
 @	IN	NS	ns1.mg.asa.br.
-@	IN	NS	ns2.mg.asa.br.
 @	IN	MX 10	PEGASUS
 
 ; REGISTROS "A"
-ns1		IN		A	10.25.0.10
-ns2		IN		A	10.25.0.11
+ns1		IN		A	3.95.246.135	
 
 PEGASUS	IN		A	10.25.0.12
 CARACAL	IN		A	10.25.0.13
