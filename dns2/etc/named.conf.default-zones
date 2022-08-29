@@ -1,0 +1,112 @@
+// prime the server with knowledge of the root servers
+
+acl internal {
+    172.25.10.0/24;
+	127.0.0.1/32;
+};
+
+acl external {
+	10.200.0.0/16;
+	192.168.1.0/24;
+	10.25.0.0/16;
+	10.24.0.0/16;
+	127.0.0.1/32;
+
+};
+
+view external {
+
+	recursion no;
+	match-clients{ any; };
+	allow-query{ any; };
+
+	zone "." {
+		type hint;
+		file "/usr/share/dns/root.hints";
+	};
+
+	// be authoritative for the localhost forward and reverse zones, and for
+	// broadcast zones as per RFC 1912
+
+	zone "localhost" {
+		type master;
+		file "/etc/bind/db.local";
+	};
+
+	zone "127.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.127";
+	};
+
+	zone "0.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.0";
+	};
+
+	zone "255.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.255";
+	};
+
+	zone "mg.asa.br" {
+		type slave;
+		file "/etc/bind/zones/direct/db.mg.asa.br.external";
+		masters { 172.25.0.10; };
+	};
+
+	zone "0.25.10.in-addr.arpa" {
+		type slave;
+		file "/etc/bind/zones/reverse/db.reverso.mg.asa.br.external";
+		masters { 172.25.0.10; };
+	};
+};
+
+view internal{
+
+	recursion yes;
+	match-clients{ internal; };
+	allow-query{ internal; };
+			
+	zone "." {
+		type hint;
+		file "/usr/share/dns/root.hints";
+	};
+
+	// be authoritative for the localhost forward and reverse zones, and for
+	// broadcast zones as per RFC 1912
+
+	zone "localhost" {
+		type master;
+		file "/etc/bind/db.local";
+	};
+
+	zone "127.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.127";
+	};
+
+	zone "0.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.0";
+	};
+
+	zone "255.in-addr.arpa" {
+		type master;
+		file "/etc/bind/db.255";
+	};
+
+	zone "mg.asa.br" {
+		type master;
+		file "/etc/bind/zones/direct/db.mg.asa.br.internal";
+		masters { 172.25.0.10; };
+	};
+
+	zone "10.25.172.in-addr.arpa" {
+		type slave;
+		file "/etc/bind/zones/reverse/db.reverso.mg.asa.br.internal";
+		masters { 172.25.0.10; };
+	};
+};
+
+
+

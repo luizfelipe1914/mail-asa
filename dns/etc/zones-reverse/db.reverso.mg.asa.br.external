@@ -1,0 +1,22 @@
+;
+; BIND reverse data file for broadcast zone
+;
+
+$TTL	604800
+$ORIGIN 0.25.10.in-addr.arpa.
+
+@	IN	SOA	ns1.mg.asa.br. webmaster.mg.asa.br. (
+		2022081501		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+@	IN	NS	ns1.mg.asa.br.
+@	IN	NS	ns2.mg.asa.br.
+@	IN	MX 10	PEGASUS
+
+10	IN	PTR		ns1
+11	IN	PTR		ns2
+12  IN  PTR     PEGASUS	
+60	IN	PTR		PROXY

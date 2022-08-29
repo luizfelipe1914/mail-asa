@@ -1,0 +1,90 @@
+# Diretório das filas de e-mail:
+
+queue_directory = /var/spool/postfix
+
+# Diretórios com os comandos de gerenciamento do postfix:
+# post... 
+command_directory = /usr/sbin
+
+# Diretório de arquivos de dados do postfix
+data_directory = /var/lib/postfix
+
+# usuário que controla os daemons
+mail_owner = postfix
+
+# Hostname
+myhostname = PEGASUS.mg.asa.br
+
+# Domínio:
+mydomain = mg.asa.br
+
+# Nome do domínio de origem para as mensagens enviadas:
+myorigin = $mydomain
+
+# interfaces onde o serviço vai ficar em listen:
+inet_interfaces = all
+
+#Versão do protocolo IP(ipv4, ipv6 ou, ambobos: all)
+inet_protocols = all
+
+# domínios para os quais o postfix receberá e-mails:
+
+mydestination = $mydomain, $myhostname, localhost.$mydomain, localhost, localhost.localhost
+
+# Endereços de rede que o postfix irá receber e encaminhas e-mail sem autenticação.
+mynetworks = 127.0.0.1 #192.168.1.0/24 172.5.10.0/24
+
+#header_checks = regexp:/etc/postfix/header_checks
+debug_peer_list = 127.0.0.1
+maillog_file=/var/log/postfix.log
+
+# Mapeamento e base de dados para a lista de alias de e-mail
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+# Localização da caixa de e-mail
+home_mailbox = Maildir/
+
+debug_peer_level = 2
+debugger_command =
+	PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+	ddd $daemon_directory/$process_name $process_id & sleep 5
+
+# Tamanho máximo das mensagens: 20 MB
+message_size_limit = 20971520
+
+# Tamanho máximo da caixa de correio do usuário: 1GB
+mailbox_size_limit = 1073741824
+
+# Parâmetros referentes a autenticação:
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+smtpd_recipient_restrictions = permit_mynetworks,permit_sasl_authenticated,reject
+
+ # newaliases_path: The full pathname of the Postfix newaliases command.
+ # This is the Sendmail-compatible command to build alias databases.
+ #
+newaliases_path = /usr/bin/newaliases.postfix
+ 
+ # mailq_path: The full pathname of the Postfix mailq command.  This
+ # is the Sendmail-compatible mail queue listing command.
+ # 
+mailq_path = /usr/bin/mailq.postfix
+ 
+# setgid_group: The group for mail submission and queue management
+# commands.  This must be a group name with a numerical group ID that
+# is not shared with other accounts, not even with the Postfix account.
+#
+setgid_group = postdrop
+ 
+# html_directory: The location of the Postfix HTML documentation.
+#
+html_directory = no
+
+
+
+
+

@@ -1,0 +1,220 @@
+version: '3.9'
+
+networks:
+  ctnetwork:
+    name: ctnetwork
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.25.10.0/24"
+          gateway: 172.25.10.254
+
+services:
+  ns1:
+    build:
+      context: ./dns
+      dockerfile: Dockerfile
+    image: "ns1:bind9"
+    container_name: ns1
+    hostname: "ns1.mg.asa.br"
+    restart: always
+    tty: true
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.10
+    ports:
+      - '53:53/tcp'
+      - '53:53/udp'
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    volumes:
+      - bind9-master-logs:/var/log/named
+
+  ns2:
+    build:
+      context: ./dns2
+      dockerfile: Dockerfile
+    image: "ns2:bind9"
+    container_name: ns2
+    hostname: "ns2.mg.asa.br"
+    restart: always
+    depends_on:
+      - ns1
+    tty: true
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.11
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    volumes:
+      - bind9-slave-logs:/var/log/named
+
+  proxy: 
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: nginx
+    container_name: proxy
+    hostname: "www.mg.asa.br"
+    restart: always
+    tty: true
+    ports:
+      - "80:80/tcp"
+    depends_on:
+      - ns1
+      - ns2
+      - webmail
+      - web
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.60
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+
+  email:
+    build:
+      context: ./mail
+      dockerfile: Dockerfile
+    image: "mail:postfix_dovecot"
+    container_name: email
+    hostname: "PEGASUS.mg.asa.br"
+    restart: always
+    tty: true
+    ports:
+      - '587:587/tcp'
+      - '25:25/tcp'
+      - '143:143/tcp'
+      - '110:110/tcp'
+    depends_on:
+      - ns1
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.12
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    volumes:
+      - email:/var/users:rw
+      - mail_logs:/var/logs:rw
+    
+
+  mysql:
+    build:
+      context: ./MySQL
+      dockerfile: Dockerfile
+    image: "mysql:latest"
+    container_name: mysql
+    hostname: "MYSQL.mg.asa.br"
+    restart: always
+    tty: true
+    depends_on:
+      - ns1
+      - ns2
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.30
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    volumes:
+      - db:/var/lib/mysql:rw
+    environment:
+      - MYSQL_ROOT_PASSWORD=123@senha
+      - MYSQL_USER=roundcube
+      - MYSQL_PASSWORD=123@senha
+  webmail:
+    build:
+      context: ./webmail
+      dockerfile: Dockerfile
+    image: "roundcube"
+    container_name: CARACAL
+    hostname: CARACAL.mg.asa.br
+    restart: always
+    tty: true
+    depends_on:
+      - ns1
+      - ns2
+      - mysql
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.13
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    volumes:
+      - html:/var/www/html:rw
+      - config:/var/roundcube/config:rw
+      - tmp:/tmp/roundcube-temp:rw
+    environment:
+      - ROUNDCUBEMAIL_DB_TYPE=mysql
+      - ROUNDCUBEMAIL_DB_HOST=MYSQL.mg.asa.br
+      - ROUNDCUBEMAIL_DB_PORT=3306
+      - ROUNDCUBEMAIL_DB_USER=roundcube
+      - ROUNDCUBEMAIL_DB_PASSWORD=123@senha
+      - ROUNDCUBEMAIL_DB_NAME=roundcubemail
+      - ROUNDCUBEMAIL_DEFAULT_HOST=PEGASUS.mg.asa.br
+      - ROUNDCUBEMAIL_DEFAULT_PORT=143
+      - ROUNDCUBEMAIL_SMTP_SERVER=PEGASUS.mg.asa.br
+      - ROUNDCUBEMAIL_SMTP_PORT=25
+      - ROUNDCUBEMAIL_ASPELL_DICTS:pt_BR
+    ports:
+      - "8888:80/tcp"
+  web:
+
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: "wordpress"
+    container_name: WORDPRESS
+    hostname: "WORDPRESS.mg.asa.br"
+    restart: always
+    tty: true
+    depends_on:
+      - ns1
+      - ns2
+      - mysql
+    networks:
+      ctnetwork:
+        ipv4_address: 172.25.10.50
+    dns:
+      - 172.25.10.10
+      - 172.25.10.11
+    ports:
+      - "8080:80/tcp"
+    #volumes:
+    #  - wordpress:/var/www/html:rw
+    #environment:
+    #  - WORDPRESS_DB_HOST=MYSQL.mg.asa.br
+    #  - WORDPRESS_DB_USER=wordpress
+    #  - WORDPRESS_DB_PASSWORD=123@senha
+    #  - WORDPRESS_DB_NAME=wordpress
+
+volumes:
+  bind9-master-logs:
+    name: bind9-master-logs
+  bind9-slave-logs:
+    name: bind9-slave-logs
+  db:
+    name: db
+  email:
+    name: email
+  html:
+    name: html
+  config:
+    name: config
+  tmp:
+    name: tmp
+  mail_logs:
+    name: mail_logs
+ # wordpress:
+ #   name: wordpress
+  
+  
+
+
+
+
